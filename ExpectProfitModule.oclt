@@ -1,0 +1,55 @@
+structure ExpectProfitModule {
+	
+	function void profits (List<Farm> lfarms, Integer year, Integer in_potato_productivity, Double in_dairy_productivity, Integer in_cattle_head) {
+		let potatoValues = new PotatoEconomicValuesCsv
+		for (record:potatoValues) {
+			if (year == record.readInteger(0)) {
+			    //farm.potato_productivity = in_potato_productivity //se debe difrenciar a productiviad inicial de la real por finca y año
+				for (farm:lfarms){
+//					farm.crop = farm.d_crop // no sé todavía cómo actualizar la proporción...
+//					farm.potatoProduction = in_potato_productivity * farm.crop * farm.area //productivity(kg/ha) area (ha)
+//					farm.crop_income = record.readDouble(1) * farm.potatoProduction //$: price($/kg)
+//					farm.crop_cost = record.readDouble(2) * farm.crop * farm.area
+//					farm.crop_profit = farm.crop_income - farm.crop_cost
+					
+					//fix csvFile = "output/PotatoProfits.csv"
+      				//printToFile(csvFile,"Year,"+year+",Farm,"+farm.id+",Area of crop,"+farm.crop+",Total farm area,"+farm.area+
+      				//",potato price ($/kg),"+record.readDouble(1)+",potato cost ($/ha),"+record.readDouble(2)+",Potato productivity (kg/ha*yr),"+in_potato_productivity+",Potato production (kg/farm*yr),"+farm.potatoProduction+
+      				//",crop income ($/yr),"+farm.crop_income+",crop cost ($/yr),"+farm.crop_cost+",crop profit ($/yr),"+farm.crop_profit
+     			    //)
+				}
+			}
+		}
+	
+	    let	dairyValues = new DairyEconomicValuesCsv
+	    for (record:dairyValues) {
+			if (year == record.readInteger(0)) {
+				for (farm:lfarms){
+//	    			farm.pasture = farm.d_pasture
+//	    			farm.dairyProduction = in_dairy_productivity * in_cattle_head * farm.pasture * farm.area // lt/farm*yr
+//	    			farm.pasture_income = record.readDouble(1) * farm.dairyProduction
+//	    			farm.pasture_cost = (record.readDouble(2) * farm.dairyProduction) + (record.readDouble(3) * farm.pasture * farm.area)
+//	    			farm.pasture_profit = farm.pasture_income - farm.pasture_cost
+	    			
+	    			//fix csvFile = "output/DairyProfits.csv"
+      				//printToFile(csvFile,"Year,"+year+",Farm,"+farm.id+",Area of pasture,"+farm.pasture+",Total farm area,"+farm.area+
+      				//",dairy price ($/lt),"+record.readDouble(1)+",dairy fixed cost ($/lt),"+record.readDouble(2)+",dairy variable cost ($/ha),"+record.readDouble(3)+",Dairy productivity (lt/(yr*cattle),"+in_dairy_productivity+
+      				//",Dairy production (lt/farm*yr),"+farm.dairyProduction+",pasture income ($/yr),"+farm.pasture_income+",pasture cost ($/yr),"+farm.pasture_cost+",pasture profit ($/yr),"+farm.pasture_profit
+     			   //)
+	    	    }
+			}
+	    }
+	
+	}
+}
+
+
+//----------------------- Economic value inputs
+
+datafacer DairyEconomicValuesCsv {
+	data Csvfile ("data/ExpectProfit/Dairy_values.csv")
+}
+
+datafacer PotatoEconomicValuesCsv {
+	data Csvfile ("data/ExpectProfit/Potato_values.csv")
+}

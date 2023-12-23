@@ -1,0 +1,111 @@
+metadata {
+  parameter Boolean kmlexport {default false} // True si queremos que exporte kml
+  parameter Boolean shpexport {default true}  // True si queremos que exporte shp
+  parameter Integer simulationstart {default 2019}
+  parameter Integer simulationend {default 2050}
+  parameter String kmlfilename {default "output/LandUses.kml"}
+  parameter String shpfilename {default "output/LandUses.shp"}  
+    
+  // --------------------------- Ecosystem service parameters
+  parameter Double forest_vf {default 0.0095}  // forest vegetation factor
+  parameter Double crop_vf {default 0.435}     // crop vegetation factor
+  parameter Double pasture_vf {default 0.13}   // pasture vegetation factor  
+ 
+  // --------------------------- Governance parameters
+  parameter Double n_spaces {default 8.0} //farm.participation= farm.diffusion_cons/n_spaces
+  parameter Double n_projects {default 5.0}
+  parameter Double w_modelVarEffect {default 0.05} // realimentación débil de las variables del modelo de decisión
+  parameter Double s_modelVarEffect {default 0.1}  // realimentación fuerte de las variables del modelo de decisión
+  parameter Double delay_modelVarEffect {default 5.0} //5 años de retardo en los efectos de las variables del modelo de decisión
+  
+  // --------------------------- LULCC parameters
+  parameter Double propMinPasture {default 0.166}   // Proporción cultivable mínima es pasto para que se considere ganadero
+
+  // --------------------------- Scenarios parameters
+  parameter Boolean productiveSupport {default false}
+  parameter Double prodSupp {default 0.7} // cambio porcentual
+  
+  parameter Boolean effectiveCC {default true}
+  parameter Double eCC {default 0.7} // cambio porcentual
+  
+  parameter Boolean ineffectiveCC {default false}
+  parameter Double iCC {default 0.7} // cambio porcentual
+}  
+
+
+scenario RioGrande {
+  println("Model RioGrande")
+
+  //======================================================= Initialiazation phase
+  
+  // ------------------------------- Create and initialize the Farms and Actors modules
+  fix governancemodule = new GovernanceModule
+  governancemodule.initialize 
+  
+  fix farmsmodule = new FarmsModule
+  farmsmodule.initialize (n_spaces, n_projects)
+  
+    //Creación de la nueva relación actor-finca
+  let actorfarm = new ActorFarm
+  governancemodule.assignBuyer(farmsmodule.lfarms)
+  
+  // ------------------------------- Create and initialize the EcosystemService module
+  fix ecservmodule = new EcServModule
+  
+  
+  // ---------------------------------- Create and initialize the Outputs module
+  fix outputmodule = new OutputModule
+  outputmodule.initialize
+
+
+
+  //===================================================== Simulation phase
+
+//  if (kmlexport) outputmodule.exportTokml(farmsmodule.lfarms)
+  
+  for (year:simulationstart..simulationend) {
+  	//println("Year: "+year)
+      fix startdate = DateTime|ymd(year,1,1)
+      println("Start date: "+startdate)
+        
+    farmsmodule.applyDecisions (year)
+    farmsmodule.planDecisions (year)
+           
+    farmsmodule.categorizeLanduses (year)
+    
+    governancemodule.contarActores
+    
+    ecservmodule.potential_water_erosion (farmsmodule.lfarms, year)
+    ecservmodule.total_vegetation_factor (farmsmodule.lfarms, forest_vf, crop_vf, pasture_vf) //forma de conectar los módulos
+    ecservmodule.water_erosion_soil (farmsmodule.lfarms, year)
+    
+    governancemodule.socialPressurePasture (farmsmodule.lfarms, propMinPasture, year)
+    
+    governancemodule.scenariosExecution (productiveSupport, prodSupp, effectiveCC, eCC, ineffectiveCC, iCC, farmsmodule.lfarms)
+    farmsmodule.propertiesUpdate(propMinPasture, year)
+
+      if (kmlexport) outputmodule.exportLandUsesTokml(startdate, startdate.addYears(1), farmsmodule.lfarms)
+      if (shpexport) outputmodule.saveShpLanduses(startdate, startdate.addYears(1), farmsmodule.lfarms, shpfilename, year)
+  }
+
+  //======================================================= Last state Output
+  
+  // toda esta sección se hace efectiva la creación del KML definido en el ciclo.
+  
+    fix startdate = DateTime|ymd(simulationend,1,1)
+    if (kmlexport) {
+     // salidas de las categorías
+      outputmodule.exportLandUsesTokml(startdate, startdate.addYears(1), farmsmodule.lfarms)
+     // ubicación de los actores
+    //  outputmodule.exportActorsToKml(governancemodule.lactors)
+      outputmodule.saveTheKmlFile(kmlfilename)
+    }
+
+   // if (shpexport) {
+   // 	outputmodule.saveShpLanduses(farmsmodule.lfarms, shpfilename)
+   // }
+    
+    println("Done.")
+    
+   
+}

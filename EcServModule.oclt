@@ -1,0 +1,61 @@
+structure EcServModule {
+
+  
+    function void potential_water_erosion(List<Farm> lfarms, Integer year) {
+    	
+      let precip = new PrecipitationCsv    	
+      for (record:precip) {
+    	 if (year == record.readInteger(0)) {
+    	   for (farm:lfarms) {
+    		  if (farm.station.equals("ARAGON")) farm.p = record.readDouble(1) //average annual precipitation mm/yr (valor mínimo mientras saco la p)  	           	            	  			
+    		  else {if (farm.station.equals("BELMIRA")) farm.p = record.readDouble(2)
+                else {if (farm.station.equals("LA_OCULTA")) farm.p = record.readDouble(3)
+                	else farm.p = record.readDouble(4)
+                    }
+    	        }
+    	  //println("Year, "+year+", Station, "+farm.station+", Farm ,"+farm.id+", "+farm.p+", mm")
+    	  }
+    	 }
+       }
+      
+      for (farm:lfarms) {
+        if (farm.p > 1240) {farm.rainfall_eros = - 8.831 + 0.0071263 * farm.p }
+   	    else {farm.rainfall_eros = 0.00001193 * farm.p ** 1.70148} 
+   	    farm.ep_pot_water_erosion = farm.rainfall_eros * farm.mean_k * farm.mean_ls   
+        
+     //   println ("Farm: "+farm.id+" Rainfall Erosivity Factor:"+farm.r_prec_eros+" K: "+farm.mean_k+" LS: "+farm.mean_ls)
+        
+        fix csvFile = "output/EP_pot_water_erosion.csv"
+        printToFile(csvFile,"Year,"+year+",Farm,"+farm.id+",Station,"+farm.station+",Annual precipitation,"+farm.p+",mm"
+      	+",Precipitation Erosivity Factor,"+farm.rainfall_eros+",Potential water erosion,"+farm.ep_pot_water_erosion)
+      }
+    }
+    
+   
+    function void total_vegetation_factor (List<Farm> lfarms, Double forest_vf, Double crop_vf, Double pasture_vf) {
+   	  
+   	 for (farm:lfarms) {
+   	  farm.total_vf = (forest_vf*farm.c_forest) + (crop_vf*farm.c_crop) + (pasture_vf*farm.c_pasture)
+   	 } 
+   	   	  
+    }
+    
+    function void water_erosion_soil (List<Farm> lfarms, Integer year) {
+      
+      for (farm:lfarms) {
+      // erosión en el predio. Revisar si sería por área (ha)	
+   	  farm.w_erosion_soil = (farm.ep_pot_water_erosion * farm.total_vf * 1) * farm.area //1: management practice
+   	  fix csvFile = "output/Annual_erosionSANCT.csv"
+      printToFile(csvFile,"Year,"+year+",Farm,"+farm.id+",Water erosion of soil AREA,"+farm.w_erosion_soil)
+   	 } 
+    }
+   
+}
+
+
+
+datafacer PrecipitationCsv { 
+	data Csvfile ("data/EcServ/AnnualPrecipitation.csv",",")
+}
+
+

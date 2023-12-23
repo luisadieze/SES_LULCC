@@ -1,0 +1,250 @@
+structure GovernanceModule {
+   List<Actor> lactors
+	
+   function void initialize(){	
+   	fix dactors = new DActors
+   	lactors = dactors.readAll
+   	// println(dactors.about())  		 
+   }	
+
+   function void contarActores (){
+   	for (actor:lactors){
+   //println("Actor "+actor.name)
+   	}
+   }
+
+
+   function void assignBuyer (List<Farm> lfarms) {
+   		
+   for (farm:lfarms){
+   	 let a = random() //número aleatorio para asignar: leche o levante
+     let b = random() // número aleatorio para asignar empresa
+     //Predios que tienen pasto
+     if (farm.real_pasture >= 0.166667)
+     {if (a <= 0.78) //El 78% de los predios con pasto se dedica a leche (lo restante a levante)
+      {if (b <= 0.55) farm.buyer = "COLANTA"
+    	else {if (b <= 0.58) farm.buyer = "ALPINA"
+    	 else {if (b <= 0.64) farm.buyer = "AURALAC"
+    	 	else {if (b <= 0.69) farm.buyer = "CORPOGANSA"
+    	 		else {if (b <= 0.73) farm.buyer = "EL_CORRAL"
+    	 			else {if (b <= 0.78) farm.buyer = "EL_LLANO"
+    	 				else {if (b <= 0.80) farm.buyer = "HTM"
+    	 					else {if (b <= 0.96) farm.buyer = "L_BETANIA"
+    	 						else farm.buyer = "PARMALAT"}
+    	 					}
+    	 				}
+    	 			}
+    	 		}
+    	 	}
+    	 }
+      } 
+    }
+   // println("b: "+b+" Farm: "+farm.id+" real_Pasture: "+farm.real_pasture+"  Comprador: "+farm.buyer)
+   // fix csvFile = "output/compradores.csv"
+   // printToFile(csvFile,"a,"+a+"Farm,"+farm.id+",real_Pasture,"+farm.real_pasture+",Comprador,"+farm.buyer)
+  }
+
+   fix actorfarm = new ActorFarm
+   //grafo no conectado con actores y fincas
+   actorfarm.addAllActor(lactors)
+   actorfarm.addAllFarm(lfarms)
+   //se crea red completa pero se conectan las relaciones cuando farm.buyer == actor.name			
+   actorfarm.complete.filt_sales.connect
+ //¿dónde se pone esto para que funcione y cree links? actorfarm.drawLinks(kml)
+  //crear un datafacer de juguete para probar links
+  
+  
+  // let kml = new PruebaRed_kml
+  //  kml.defStyle("purple", 1.0, Color|rgb(122,100,252), Color|rgba(148,148,252,60))
+ 	//for (farm:lfarms) { 
+ 	//	kml.addGeometry("Predios"+farm.id,"","",farm.geom, "purple",0)
+ 	//	kml.addLabel(farm.geom.centroid.x, farm.geom.centroid.y, 0, "", "", "famr "+farm.id, "", "green")
+ 	// }
+ 	 
+ //	actorfarm.drawLinks(kml)
+ //	kml.saveAsKml
+ 	//println("Número de enlaces entre campesinos y empreas: "+actorfarm.size) //Devuelve el número de links
+  }
+  
+   function void updateGovernanceFunctions (List<Farm> lfarms) {
+   	
+   }
+   
+   function void socialPressurePasture (List<Farm> lfarms, Double propMinPasture, Integer year) {
+   	for (farm:lfarms){
+   		let quantity = 0 
+   		//println("Finca: "+farm.id+" Amigos: "+farm.friends.size)
+   		if (farm.friends.size!= 0) {quantity = farm.friends.size - 1} // tamaño de la lista de amigos
+   		//println("Finca: "+farm.id+" Cantidad de amigos: "+quantity)
+   		for (x:0..quantity) {
+   			fix id_prov = farm.friends.get(x) //devuelve el objeto que está en la posición x (id del amigo).
+   		   //println ("Finca "+farm.id+": amigo:"+id_prov)
+   		    for (farms:lfarms) {
+   		    	if (farms.id.equals(id_prov)) { //cuando el id coincide con el valor de la lista...
+   		         if (farms.d_pasture >= propMinPasture) //
+   		         farms.livestockFarmer_friend = farms.livestockFarmer_friend +1
+   		        }
+   		    }   			
+   		} 
+	
+   	if (quantity >= 0) {
+   		fix pressure = farm.livestockFarmer_friend.doubleValue/(quantity.doubleValue + 1.0) //se vuelve a sumar la unidad restada antes.
+   		farm.pasture_pressure = pressure   		
+   	  }	else (farm.pasture_pressure = 0.0) 
+   	//println("Farm:"+farm.id+" Cantidad de amigos:"+quantity+
+   	//" Amigos ganaderos:"+farm.livestockFarmer_friend+" Presión por ganadería:"+farm.pasture_pressure)
+   		
+   	}
+   }
+  
+   function void scenariosExecution (Boolean productiveSupport, Double prodSupp, Boolean effectiveCC, Double eCC, Boolean ineffectiveCC, Double iCC, List<Farm> lfarms) {
+   	 // "PRODUCTIVE SUPPORT" scenario
+   	 if (productiveSupport) {
+   	 	 for (farm:lfarms) {
+   	 	 // "Participation in production projects" update
+   	 	   if (farm.prod_projects < 1.0) farm.prod_projects = farm.prod_projects 
+   	 	   + (farm.prod_projects * prodSupp)
+   	 	   if (farm.prod_projects > 1.0) farm.prod_projects = 1.0
+   	 	 // "Pasture threats" update
+   	 	   if (farm.threats_pasture < 1.0) farm.threats_pasture = farm.threats_pasture 
+   	 	   - (farm.threats_pasture * prodSupp)
+   	 	   if (farm.threats_pasture > 1.0) farm.threats_pasture = 1.0
+   	 	 // "Social influence of production actors" update
+   	 	   if (farm.socialinfluence_prod < 1.0) farm.socialinfluence_prod = farm.socialinfluence_prod 
+   	 	   + (farm.socialinfluence_prod * prodSupp)
+   	 	   if (farm.socialinfluence_prod > 1.0) farm.socialinfluence_prod = 1.0
+   	 	 }
+   	 }
+   
+     // "EFFECTIVE COMMAND AND CONTROL" scenario
+     if (effectiveCC) {
+     	for (farm:lfarms) {
+     	 // "Participation in conservation projects" update
+   	      if (farm.cons_projects < 1.0) farm.cons_projects = farm.cons_projects 
+   	 	  + (farm.cons_projects * eCC)
+   	 	  if (farm.cons_projects > 1.0) farm.cons_projects = 1.0
+     	 // "Participation in administrative spaces" update
+   	      if (farm.participation < 1.0) farm.participation = farm.participation 
+   	 	  + (farm.participation * eCC)
+   	 	  if (farm.participation > 1.0) farm.participation = 1.0
+   	 	 // "Social influence of conservation actors" update
+   	 	  if (farm.socialinfluence_cons < 1.0) farm.socialinfluence_cons = farm.socialinfluence_cons 
+   	 	  + (farm.socialinfluence_cons * eCC)
+   	 	  if (farm.socialinfluence_cons > 1.0) farm.socialinfluence_cons = 1.0 
+   	 	 // "Severity of conservation sanctions" update
+   	 	  if (farm.sanctions_cons < 1.0) farm.sanctions_cons = farm.sanctions_cons 
+   	 	  + (farm.sanctions_cons * eCC)
+   	 	  if (farm.sanctions_cons > 1.0) farm.sanctions_cons = 1.0 
+   	 	 // a todos los 3 tipos de protección se les suma x% de su valor, sin sobrepasar el 1 en proporción.
+   	 	 // "Restoration policy" update
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) < 1.0) farm.restoration_p = farm.restoration_p 
+   	 	  + (farm.restoration_p * eCC)
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) > 1.0) farm.restoration_p = 1.0 - (farm.protection_p + farm.sustainableuse_p) 
+   	 	 // "Sustainable Use policy" update
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) < 1.0) farm.sustainableuse_p = farm.sustainableuse_p 
+   	 	  + (farm.sustainableuse_p * eCC)
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) > 1.0) farm.sustainableuse_p = 1.0 - (farm.protection_p + farm.restoration_p)    
+         // "Protection policy" update
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) < 1.0) farm.protection_p = farm.protection_p 
+   	 	  + (farm.protection_p * eCC)
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) > 1.0) farm.protection_p = 1.0 - (farm.sustainableuse_p + farm.restoration_p)     
+
+     	}
+     }
+     
+     // "INEFFECTIVE COMMAND AND CONTROL" scenario
+     if (ineffectiveCC) {
+     	for (farm:lfarms) {
+   	 	 // "Severity of conservation sanctions" update
+   	 	  if (farm.sanctions_cons < 1.0) farm.sanctions_cons = farm.sanctions_cons 
+   	 	  + (farm.sanctions_cons * eCC)
+   	 	  if (farm.sanctions_cons > 1.0) farm.sanctions_cons = 1.0 
+   	 	 // a todos los 3 tipos de protección se les suma x% de su valor, sin sobrepasar el 1 en proporción.
+   	 	 // "Restoration policy" update
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) < 1.0) farm.restoration_p = farm.restoration_p 
+   	 	  + (farm.restoration_p * eCC)
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) > 1.0) farm.restoration_p = 1.0 - (farm.protection_p + farm.sustainableuse_p) 
+   	 	 // "Sustainable Use policy" update
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) < 1.0) farm.sustainableuse_p = farm.sustainableuse_p 
+   	 	  + (farm.sustainableuse_p * eCC)
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) > 1.0) farm.sustainableuse_p = 1.0 - (farm.protection_p + farm.restoration_p)    
+         // "Protection policy" update
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) < 1.0) farm.protection_p = farm.protection_p 
+   	 	  + (farm.protection_p * eCC)
+   	 	  if ((farm.protection_p + farm.sustainableuse_p + farm.restoration_p) > 1.0) farm.protection_p = 1.0 - (farm.sustainableuse_p + farm.restoration_p)     
+
+//ver el efecto de la disminución de la actitud
+     	 // "Attitud" update
+   	 	  if (farm.attitude < 1.0 && farm.attitude > 0.0) farm.attitude = farm.attitude 
+   	 	  - (farm.attitude * 0.1)
+   	 	  if (farm.attitude > 1.0) farm.attitude = 1.0
+   	 	  if (farm.attitude < 0.0) farm.attitude = 0.0
+     	
+     	
+     	
+     	}
+     }
+   
+   
+   }
+}
+
+
+ // relación entre fincas y otros actores
+relation ActorFarm <Actor actor, Farm farm> {
+	
+ //primera interacción: compra-venta de producto
+    //Buyer is the company
+	interaction connectBuyer_Farm () {    
+		//xxxxxxxxxxxxxxxxxxxxx
+		//xxxxx ¿qué queremos que ocurra cuando se conectan?
+		//xxxxxxxxxxxxxxxxxxxxx
+	}
+	//sirve para filtrar la red completa, a solo las conexiones de interés.
+	filter filt_sales () {
+	 return farm.buyer == actor.name  // devuelve "true" si el nombre del comprador es el mismo que el actor.
+	}
+
+ //   interaction drawLinks(PruebaRed_kml kml) { //interacción para dibujar las líneas de la red.
+ //  	fix line = Line|points(actor.geom.centroid,farm.geom.centroid) //las líneas van desde y hacia los centroides del polígono.
+ // 	    kml.addGeometry("Links",actor.name+"-"+farm.id,"","",line,"link",0.0)
+ //   }
+      	
+}
+
+//BOUNDARY
+
+  // protection_p      
+  // restoration_p     
+  // sustainableuse_p  
+  // participation   
+  
+// PROJECTS
+ 
+  //prod_projects        
+  //socialinfluence_prod  
+  //socialinfluence_cons 
+  
+// MONITORING
+
+  //monitActor_prod    
+  //sanctions_cons   
+
+entity Actor {
+  property Long id
+  property Point geom
+  property String name
+}
+  
+datafacer DActors {
+  data Shapefile("data/Governance/Actors.shp","EPSG:31918") //SIRGAS_UTM_Zone_18N
+  match Actor {
+    id : "Id"
+	geom : "the_geom"
+	name: "Actor"
+  }
+}
+    
+//datafacer PruebaRed_kml {
+//	data KmlExport("output/RedVenta.kml")
+//}    

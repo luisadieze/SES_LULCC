@@ -1,0 +1,100 @@
+structure OutputModule {
+   
+   Dkml kml
+   
+   function void initialize() {
+
+   	 let kml = new Dkml
+
+   }
+
+
+  //============================================================== SHP
+
+   function void exportShpLanduses (DateTime start, DateTime end, List<Farm> lfarms) {
+   	
+   }
+   
+   //function void saveShpLanduses(List<Farm> lfarms, String filename) {
+   function void saveShpLanduses(DateTime start, DateTime end, List<Farm> lfarms, String filename, Integer year) { 
+   	    	    	 
+   	 fix simuLandUsesShp = new Dshplanduses
+   	 simuLandUsesShp.remove //toca borrarlos a mano
+   	 simuLandUsesShp.fileName = ("output/LandUses"+year+".shp")//filename
+   	 simuLandUsesShp.append(lfarms)
+   }
+
+  // Para mapa (Shp) dinámico
+  
+
+  
+  
+  //============================================================== KML
+   
+   // crea la geometría de las fincas año a año
+   function void exportLandUsesTokml(DateTime start, DateTime end, List<Farm> lfarms) {
+     let tr = 220  // transparency level
+     kml.defStyle("st_C",2,kmlColorRGB(128-20,228-20,0),kmlColorRGBA(240,228,0,tr))  // style for C
+     kml.defStyle("st_F",2,kmlColorRGB(0,159-20,0),kmlColorRGBA(0,159,0,tr))   // style for F
+     kml.defStyle("st_P",2,kmlColorRGB(255-20,119-20,53-20),kmlColorRGBA(255,119,53,tr)) // style for P
+     kml.defStyle("st_CP",2,kmlColorRGB(253-20,222-20,149-20),kmlColorRGBA(253,222,149,tr)) // style for CP
+     kml.defStyle("st_CF",2,kmlColorRGB(143-20,211-20,1),kmlColorRGBA(143,211,1,tr)) // style for CF
+     kml.defStyle("st_FP",2,kmlColorRGB(1,205-20,123-20),kmlColorRGBA(1,205,123,tr))   // style for FP
+     kml.defStyle("st_CFP",2,kmlColorRGB(0,82-20,164-20),kmlColorRGBA(0,82,164,tr))   // style for CFP
+     
+     for (farm:lfarms) {
+       let style = "st_"+farm.category     
+       kml.addGeometry("Farms land uses",""+farm.id,start,end,farm.geom,style,0)
+      // kml.addLabel (farm.geom.centroid.x, farm.geom.centroid.y, 0, "", "", "Finca: "+farm.id+" (C:"+farm.c_crop+" - Fm:"+farm.c_forest+" - Ft:"+farm.t_forest+" - P:"+farm.c_pasture+")", "", "sin_pin")
+             
+     } 
+   }
+   
+   function void exportActorsToKml(List<Actor> lactors){
+   	for (actor:lactors){
+   		 kml.addGeometry(actor.name,"","",actor.geom,"",1)
+   	}
+   //¿Dónde poner? actorfarm.drawLinks(kml)
+   }
+
+   // guarda el kml
+   function void saveTheKmlFile(String filename) {
+     if (filename != "")  
+      kml.saveAsKml(filename)
+     else kml.saveAsKml
+   }  
+
+  
+}
+
+datafacer Dkml { 
+	data KmlExport("output/resultsX.kml") // acá parece que se pone cualquier nombre y luego se actualiza.
+}
+
+
+
+datafacer Dshplanduses  {
+  data Shapefile("output/resultLU.shp","EPSG:31918")
+  match Farm {
+  	id : "id"
+  	geom : "geom"
+	real_crop: "d_crop"       //uso real 2019-2020
+	real_pasture: "d_pasture" //uso real 2019-2020
+	real_forest: "d_forest"   //uso real 2019-2020
+  	c_crop : "c_crop"          //uso simulado e implementado
+  	c_pasture : "c_pasture"    //uso simulado e implementado
+  	c_forest : "c_forest"      //uso simulado e implementado
+  	t_forest : "t_forest"      //uso simulado en transición
+  	tot_forest: "tot_forest"   // bosque simulado y en transición
+  	w_erosion_soil : "w_erosion_soil AREA"
+  	category: "category"
+  	
+  	attitude: "attitude"
+  	participation: "participation"
+  	cons_projects: "cons_projects"
+  	socialinfluence_cons: "socialinfluence_cons"
+  	socialinfluence_prod: "farm.socialinfluence_prod"
+  	prod_projects: "prod_projects"
+  	monitActor_prod: "monitActor_prod"
+  }
+}

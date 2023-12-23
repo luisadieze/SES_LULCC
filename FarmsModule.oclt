@@ -1,0 +1,424 @@
+structure FarmsModule { //structures pueden contener cualquier cosa.
+   List<Farm> lfarms
+   
+   function void initialize (Double n_spaces, Double n_projects) {
+   	 fix dfarms = new DFarms
+   	 lfarms = dfarms.readAll
+   	// println(dfarms.about) 
+ 
+     for (farm:lfarms) {
+   	    
+      //Creación de la lista de retardos
+     	if (farm.municipality == "086") //Si es BEL, el retardo es de 5 años
+     	farm.t_forestHistory = List|of(0.0,0.0,0.0,0.0,0.0)
+     	else //Si es SRO, el retardo es de 7 años
+     	farm.t_forestHistory = List|of(0.0,0.0,0.0,0.0,0.0,0.0,0.0) 
+     //Los predios comienzan con cobertura real como la inicial y decidida
+        farm.c_forest = farm.real_forest
+        farm.c_pasture = farm.real_pasture
+        farm.c_crop = farm.real_crop
+        farm.d_forest = farm.real_forest
+        farm.d_pasture = farm.real_pasture
+        farm.d_crop = farm.real_crop
+    
+   	    
+   	    farm.diffusion_cons = (farm.participation * n_spaces) // espacios en que participa
+   	    farm.diffusion_prod = (farm.prod_projects * n_projects) // proyectos en que participa
+   	    //println("Farm "+farm.id+" Difff_Cons: "+farm.diffusion_cons)  	   	
+   	    farm.buyer = "empty" //se comienza con este atributo vacío.
+   	 }
+   	  	 
+   	  // Instantiate a relation between close farms 	
+  	let close_friend = new friendship         // se declara "close_friend" como una relación entre "PredioPredio"
+    close_friend.addAllFarm(lfarms)           // se crean las fincas sin ninguna conexión
+    close_friend.complete.near(1000.0).connect // se crea red completa, pero con filtro "near" se mantienen solo las relaciones cuando son fincas en menos de 300 m. 
+ 	//close_friend.printLinks
+ 	close_friend.assign_close_friends        // a través de la interacción "assign_close_friends" se crea la lista de "amigos_cercanos" de cada predio.
+  	   
+   }
+   
+      
+   function void planDecisions (Integer year) {
+   	 
+   	 fix csvFile = "output/Planning.csv"
+   	 
+   	 let total_crop = 0.0    //area vegetal total de la zona en cultivo (actual+transición)
+   	 let total_forest = 0.0  //area vegetal total de la zona en bosque (actual+transición)
+   	 let total_pasture = 0.0 //area vegetal total de la zona en pasto (actual+transición)
+   	 
+   	 for (farm:lfarms) { 
+  	 	
+  	 //println("Farm "+farm.id+"      Current forest "+farm.c_forest)
+  	 	//************************************************
+  	 	//*** PARA ANÁLISIS DE SENSIBILIDAD: 
+  	 	
+   	 	//farm.attitude = 1.0
+   	 	//farm.habit_pasture = 1.0
+   	 	//farm.uncertainty_pasture = 1.0 
+   	 	     //*******Boundary...
+   	 	//farm.participation = 1.0
+   	 	     //*******Projects...
+   	 	//farm.prod_projects = 1.0
+   	 	//farm.socialinfluence_prod = 1.0
+   	 	//farm.socialinfluence_cons = 1.0
+   	 	     //*******Projects...
+   	 	//farm.monitActor_prod = 10
+   	 	//farm.sanctions_cons = 1.0
+   	 	
+   	 	//************************************************
+ 
+   	 	
+   	 	 //el campesino primero elige, y la elección se implementa luego de un retardo.
+   	 	 //por eso, la proporción decidida es lo que hay +- área en transición:  d_[cover] = c_[cover] + t_[cover]
+   	 	  
+   	 	farm.d_crop = 0.6256338+(-0.0005014*farm.area)+(-0.4390424*farm.attitude) +
+                    (0.1972487*farm.participation) +(0.2909347*farm.restoration_p) +
+                    (-0.3936385*farm.prod_projects) + (-0.1874955*farm.socialinfluence_prod) + (-0.2480428*farm.socialinfluence_cons) +
+                    (0.0758967*farm.monitActor_prod.intValue)
+        if (farm.d_crop < 0) farm.d_crop = 0.0
+
+   	    farm.d_forest = 0.0240789+(0.0005127*farm.area)+(0.4617187*farm.attitude)+
+                      (0.015022*farm.participation)+(-0.0138808*farm.sustainableuse_p)+
+                      (-0.2245934*farm.socialinfluence_prod)+(0.2524829*farm.socialinfluence_cons)+
+                      (0.0465822*farm.sanctions_cons)
+        if (farm.d_forest < 0) farm.d_forest = 0.0
+ 	      	    
+   	    farm.d_pasture = 0.3502874+(0.0032744*farm.education)+(0.0414151*farm.habit_pasture)+
+                       (-0.0363327*farm.threats_pasture)+
+                       (-0.2435813*farm.participation)+(-0.2675818*farm.restoration_p)+
+                       (0.3896749*farm.prod_projects)+(0.3792527*farm.socialinfluence_prod)+
+                       (-0.0826917*farm.monitActor_prod.intValue)
+        if (farm.d_pasture < 0) farm.d_pasture = 0.0
+        
+        // para reescalar el resultado
+        farm.sumArea =   farm.d_crop + farm.d_forest + farm.d_pasture
+        farm.d_crop = farm.d_crop/farm.sumArea
+        farm.d_forest = farm.d_forest/farm.sumArea
+        farm.d_pasture = farm.d_pasture/farm.sumArea                                  
+           
+    
+      // println(farm.id+":  Total area: "+farm.area+" Decision area:"+farm.d_area+" Corp ha="+(farm.crop*farm.d_area)+" Pasture ha:"+(farm.pasture*farm.d_area)+" Forest ha:"+(farm.forest* farm.d_area)+
+     //  	" Crop prop="+farm.crop+" Pasture prop="+farm.pasture+" Forest prop="+farm.forest)
+ 
+       
+      // Contador de área por uso/cobertura en toda la zona. 
+      // Se calcula con el "área útil" o cultivable.
+      total_crop = total_crop + (farm.d_crop * farm.d_area)       // 2801.98 ha para 2019
+      total_forest = total_forest + (farm.d_forest * farm.d_area)   // 7850,649 ha para 2019
+      total_pasture = total_pasture + (farm.d_pasture * farm.d_area) // 6203,9736 ha para 2019
+      //println("Year:"+year+" Area (ha) in crop:"+total_crop+" forest:"+total_forest+" pasture:"+total_pasture)
+      
+      printToFile(csvFile,"Year,"+year+",farm,"+farm.id+",Decided Forest,"+farm.d_forest+
+   	 		",Decided Pasture,"+farm.d_pasture+",Decided Crop,"+farm.d_crop+
+   	 		",Total Crop (ha),"+total_crop+",Total Pasture (ha),"+total_pasture+",Total Forest (ha),"+total_forest)
+   	 }
+   }
+   
+   
+   function void applyDecisions (Integer year) {
+   	fix csvFile = "output/Applying.csv"
+   	for (farm:lfarms) {
+ 	 
+     	 // Se calcula cuánta propo de bosque se va a cultivar
+  	 	 // antes de que se actualicenlas decisiones
+  	 	farm.t_forest = farm.d_forest - farm.c_forest //farm.d_forest del año pasado
+  	//	println("Farm "+farm.id+"      Transition forest "+farm.t_forest)
+   	 	if (farm.t_forest < 0.0) {
+   	 		farm.c_forest = farm.c_forest + farm.t_forest
+   	 		farm.t_forest = 0.0
+   	 	} 
+   	 	//se actualiza la lista
+   	 	farm.t_forestHistory.add(farm.t_forest)
+   	 	farm.t_forestHistory.remove(0)
+    	
+    	 
+    	 //Aquí se aplica la cantidad de bosque según decisiones pasadas
+    	 //mínimo de la lista
+        farm.minForest = farm.t_forestHistory.get(0)
+        for (i:0..(farm.t_forestHistory.size - 1)){ //-1 porque se cuenta desde 0
+          if (farm.t_forestHistory.get(i) < farm.minForest)
+          farm.minForest = farm.t_forestHistory.get(i)
+        }
+   	 	
+   	 	farm.c_forest = farm.c_forest + farm.minForest //aplico lo decidido LOS años pasados
+   	 	farm.tot_forest = farm.c_forest + farm.t_forest
+   	 	farm.c_pasture = farm.d_pasture //aplico lo decidido el año pasado
+   	 	farm.c_crop = farm.d_crop    //aplico lo decidido el año pasado
+   	 	printToFile(csvFile, "Year,"+year+",farm,"+farm.id+",Current Pasture,"
+   	 		+farm.c_pasture+",Current Crop,"+farm.c_crop+", ImplementationForest (min of list),"
+   	 		+farm.minForest+",Current Forest,"+farm.c_forest+",Transition Forest,"+farm.t_forest)
+    	}
+   }
+   
+ 
+   function void categorizeLanduses (Integer year){
+   	fix csvFile = "output/ResultsBAU.csv"
+   	for (farm:lfarms) {
+   		      // Para asignar categoría      
+      if (farm.c_crop >= (0.66666666666)) farm.category = "C" // 0.66666666666=2/3
+      else {if (farm.tot_forest >= (0.66666666666)) farm.category = "F"
+      	else {if (farm.c_pasture >= (0.66666666666)) farm.category = "P"
+      		else {if (farm.c_crop < (0.16666666666)) farm.category = "FP" // 0.16666666666=1/6
+      			else {if (farm.tot_forest < (0.16666666666)) farm.category = "CP"
+      				else {if (farm.c_pasture < (0.16666666666)) farm.category = "CF"
+      					else farm.category = "CFP"
+      				}
+      			}
+      		}
+      	}
+      }
+       
+    	printToFile(csvFile,"Year,"+year+",Farm,"+farm.id+",Total area,"+farm.area+",Decision area,"+farm.d_area+",Crop prop,"+farm.d_crop+",Forest prop,"+farm.d_forest+",Pasture prop,"+farm.d_pasture+",Category,"+farm.category+
+    	    ",Crop ha,"+(farm.d_crop*farm.area)+", Pasture ha,"+(farm.d_pasture*farm.area)+",Forest ha,"+(farm.d_forest* farm.area)+
+    	    ",Threats,"+farm.threats_pasture+",Education,"+farm.education+",Habito,"+farm.habit_pasture+",Attitude,"+farm.attitude+",Partici_tasa,"+farm.participation+",Prop_resta,"+farm.restoration_p+
+    		",Prop_usoS,"+farm.sustainableuse_p+",Pro_tasa_prod,"+farm.prod_projects+",Infl_soc_produ,"+farm.socialinfluence_prod+",Infl_soc_conser,"+farm.socialinfluence_cons+
+    		",Num_act_produc,"+farm.monitActor_prod+",Sancion_conser,"+farm.sanctions_cons+",Prop_protection,"+farm.protection_p)        
+   	}
+   }
+   
+   function void propertiesUpdate(Double propMinPasture, Integer year) {
+   	 
+   	 for (farm:lfarms){
+   	 // El orden de esta lista de actualizaciones afecta el resultado ***	
+   	 
+   	 // "Habit" update
+   	    farm.age = farm.age + 1
+   	    if (farm.c_pasture > propMinPasture) farm.years_pasture = farm.years_pasture + 1.0
+   	    farm.habit_pasture = farm.years_pasture / farm.age.doubleValue
+   	    //println("Year: "+year+" Farm: "+farm.id+" Habit in pasture= "+farm.habit_pasture)
+   	 // "Attitud" update
+   	 	if (farm.attitude < 1.0) farm.attitude = farm.attitude 
+   	 	+ ((farm.participation * farm.par) / farm.delay)
+   	 	+ ((farm.socialinfluence_cons * farm.sic) / farm.delay)
+   	 	+ ((farm.cons_projects * farm.cpro) / farm.delay)
+   	 	if (farm.attitude > 1.0) farm.attitude = 1.0
+   	 	 //println("Year: "+year+" Farm: "+farm.id+" Attitude= "+farm.attitude)
+   	 // "Participation in conservation projects" update
+   	 	if (farm.cons_projects < 1.0) farm.cons_projects = farm.cons_projects 
+   	 	+ (farm.attitude * farm.att)
+   	 	if (farm.cons_projects > 1.0) farm.cons_projects = 1.0
+   	 	 //println("Year: "+year+" Farm: "+farm.id+" Participation in conservation projects= "+farm.cons_projects)
+   	 // "Social influence of conservation actors" update
+   	 	if (farm.socialinfluence_cons < 1.0) farm.socialinfluence_cons = farm.socialinfluence_cons 
+   	 	+ (farm.participation * farm.par)
+   	 	+ (farm.cons_projects * farm.sic)
+   	 	+ (farm.attitude * farm.att)
+   	 	if (farm.socialinfluence_cons > 1.0) farm.socialinfluence_cons = 1.0
+   	 	 //println("Year: "+year+" Farm: "+farm.id+" Social influence of conservation actors= "+farm.socialinfluence_cons)   	 
+   	 // "Social influence of production actors" update
+   	 	if (farm.socialinfluence_prod < 1.0) farm.socialinfluence_prod = farm.socialinfluence_prod 
+   	 	+ (farm.participation * farm.par)
+   	 	+ (farm.prod_projects * farm.ppro)
+   	 	+ (((farm.habit_pasture + farm.pasture_pressure)/2) * farm.h)
+   	 	if (farm.socialinfluence_prod > 1.0) farm.socialinfluence_prod = 1.0
+   	 	 //println("Year: "+year+" Farm: "+farm.id+" Social influence of production actors= "+farm.socialinfluence_prod)
+   	 // "Participation in administrative spaces" update
+   	    if (farm.participation < 1.0) farm.participation = farm.participation 
+   	 	+ (farm.threats_pasture * farm.th)
+   	 	+ (farm.attitude * farm.att)
+   	 	+ (farm.socialinfluence_cons * farm.sic)
+   	 	+ (farm.sanctions_cons * farm.san)
+   	 	if (farm.participation > 1.0) farm.participation = 1.0
+   	 	 //println("Year: "+year+" Farm: "+farm.id+" Participation in administrative spaces= "+farm.participation)
+   	 // "Participation in production projects" update
+        if (farm.prod_projects < 1.0) farm.prod_projects = farm.prod_projects 
+   	 	+ (farm.threats_pasture * farm.th)
+   	 	+ (farm.socialinfluence_prod * farm.sip)
+   	 	+ (((farm.habit_pasture + farm.pasture_pressure)/2) * farm.h)
+   	 	if (farm.prod_projects > 1.0) farm.prod_projects = 1.0
+   	 	 //println("Year: "+year+" Farm: "+farm.id+" Participation in production projects= "+farm.participation)
+     // "Production actors that monitor" update (enteros)
+        farm.monitActor_prod = farm.monitActor_prod 
+   	 	+ (farm.prod_projects * farm.ppro)
+   	 	+ (farm.socialinfluence_prod * farm.sip)
+   	 	+ (((farm.habit_pasture + farm.pasture_pressure)/2) * farm.h)
+   	 	if (farm.monitActor_prod > 5.0) farm.monitActor_prod = 5.0
+   	     //println("Year: "+year+" Farm: "+farm.id+" Production actors that monitor= "+farm.participation)
+   	 	
+   	 }
+   }
+   
+   
+}
+
+
+entity Farm {
+  property DateTime chg  // Para mapa dinámico. date of last change of state
+  property String start  // Para mapa dinámico.
+  property String end    // Para mapa dinámico.
+  
+  property Integer id
+  property Integer type
+  property MultiPolygon geom
+  property Integer age          //Edad del decisor
+  property String municipality
+  property Integer education    // escolaridad: 1 to 7
+  property Double attitude      // ambiente_promedio
+  property Double d_area       // area "util" que el campesino decide
+  property Double area
+  property Double slope
+  property Double altitude
+  property String buyer        //nombre comprador de producto
+  property List<Integer> friends	  // número de amigos cercanos
+  property Double pasture_pressure
+  property Integer livestockFarmer_friend // número de amigos que son ganaderos
+  
+  property Double real_forest      // real (initial) proportion of forest normalized.
+  property Double real_crop        // real (initial) proportion of crop normalized.
+  property Double real_pasture     // real (initial) proportion of pasture normalized. 
+  
+  property Double habit_pasture    // Years with pasture / age
+  property Double years_pasture    // Years with pasture
+  property Double threats_pasture 
+  
+  // Erosion module
+  property Double mean_k         // k Factor de erodabilidad del suelo
+  property Double mean_ls        // ls_topog_factor. Promedio del predio. valor en Shapefile
+  property Double p              // current annual precipitation
+  property Double rainfall_eros   // current Precipitation Erosivity Factor [(KJ*m^2)(mm/h)]
+  property Double total_vf       // total vegetation factor
+  property Double ep_pot_water_erosion
+  property Double w_erosion_soil   // erosión 
+  property Integer erosion_impact
+  property String station        // name of the nearest station
+  
+  // Boundary settings  module
+  property Double protection_p      // prop of farm in protection (1). Can be SILAP or DMI.
+  property Double restoration_p     // prop of farm in restoration (2). Can be SILAP or DMI.
+  property Double sustainableuse_p  // prop of farm in sustainable use (3). Can be SILAP or DMI.
+  property Double participation     // partici_tasa. Participación en espacios administrativos.
+  property Double clarity_cons       // Nivel de claridad en las normas de conservación
+  property Double clarity_prod       // Nivel de claridad en las normas de producción
+  property Double diffusion_cons    // número de espacios a los que se hace difusión
+  
+ // Projects  module
+  property Double prod_projects         // Pro_tasa_prod. Tasa de participación en proyectos productivos
+  property Double cons_projects         // Pro_tasa_cons. Tasa de participación en proyectos de conservación
+  property Double diffusion_prod        // número de proy productivos a los que se hace difusión  
+  property Double socialinfluence_prod  // Infl_soc_prod. Influencia social de actores productivos
+  property Double socialinfluence_cons  // Infl_soc_conser. Influencia social de actores de conservación
+  
+ // Monitoring  module
+  property Double monitActor_prod    // Num_institu (actores). Número de actores productivos que monitoreen que conoce.
+  property Double monitActor_cons     // Num_act_co. Número de actores de conservación que monitoreen que conoce.
+  property Double sanctions_cons     // Sancion_conser. Severidad percibida normas de conservación
+  property Double sanctions_prod     // Sancion_prod. Severidad percibida normas productivas
+  property Double compliance_cons    // Nivel de cumplimiento percibido de las normas de conservación
+  property Double compliance_prod    // Nivel de cumplimiento percibido de las normas de producción
+  
+  // Economic module
+  property Integer peProfit_pasture
+
+ // ****************************************** PROPERTIES UPDATE ******************************************  
+  property Double par    // participation effect
+  property Double sic    // socialinfluence_cons effect
+  property Double cpro   // cons_projects effect
+  property Double att    // attitude_projects effect
+  property Double ppro   // prod_projects effect
+  property Double h      // habit effect
+  property Double th     // threats_pasture effect
+  property Double san    // sanctions_cons effect
+  property Double sip    // socialinfluence_prod effect
+  property Integer delay // delay of the effect
+  
+  // ****************************************** DECISION MODEL ******************************************  
+  
+  property Double c_forest   // CURRENT propocrión de bosque simulado
+  property Double c_crop     // CURRENT propocrión de cultivo simulado
+  property Double c_pasture  // CURRENT propocrión de pasto simulado
+  property Double d_forest   // DECIDED propocrión de bosque simulado
+  property Double d_crop     // DECIDED propocrión de cultivo simulado
+  property Double d_pasture  // DECIDED propocrión de pasto simulado
+  property Double tot_forest // DECIDED propocrión de bosque simulado ya aplicado
+  property Double sumArea    // para reescalar
+  property String category   // categoría de uso predominante
+  
+  property Double t_forest  // IN TRANSITION. DIFERENCIA en propocrión de bosque simulado. Se convierte en bosque una vez pase el tiempo de retardo.
+  //property Double t_crop    // IN TRANSITION. DIFERENCIA en propocrión de cultivo simulado. Se convierte en cultivo una vez pase el tiempo de retardo.
+  //property Double t_pasture // IN TRANSITION. DIFERENCIA en propocrión de pasto simulado. Se convierte en cultivo una vez pase el tiempo de retardo.
+  
+  property List<Double> t_forestHistory 
+  property Double minForest  //valor que implementará de bosque (mínimo de t_forestHistory) 
+  
+}
+
+
+relation friendship <Farm farm1, Farm farm2> {	
+	
+	interaction drawLinks(Dkml kml) { //interacción para dibujar las líneas de la red.
+    	fix line = Line|points(farm1.geom.centroid,farm2.geom.centroid) //las líneas van desde y hacia los centroides del polígono.
+  	    kml.addGeometry("Links",farm1.id+"-"+farm2.id,"","",line,"link",0.0)
+    }
+	
+	interaction assign_close_friends ()	{
+		farm1.friends.add(farm2.id) && farm2.friends.add(farm1.id)
+	}
+	
+	interaction printLinks() {
+     println(" "+farm1.id+" , "+farm2.id)
+    }
+    
+    filter near(Double dist) { //filtro según la distancia entre dos polígonos
+  	    return (farm1.geom.envelope.distance(farm2.geom.envelope) < dist) //devuelve verdadero si: ...no sé qué hace esta línea :(
+  	       && (farm1.geom.distance(farm2.geom) < dist)
+    }
+}
+
+
+datafacer DFarms {
+  data Shapefile("data/Farms/farms2019_31918_0.75PSenc.shp","EPSG:31918") //SIRGAS_UTM_Zone_18N
+  match Farm {
+    id : "OBJECTID"
+	geom : "geom"
+	type : "Grupo"
+	municipality : "MUNICIPIO" //686:SRO, 086:BEL
+	age: "Age"
+	//type : "CALIDAD"
+	mean_k: "mean_k"
+	mean_ls: "mean_ls"
+	area: "AREA_ha"
+	d_area: "Area_util"
+	real_crop: "crop_norm"
+	real_pasture: "pasture_no"
+	real_forest: "forest_nor"
+	education: "Education"
+	attitude: "Ambiente_p"
+	habit_pasture: "Habito_pas"
+	years_pasture: "YearsPastu"
+	threats_pasture: "Incertidum"
+	peProfit_pasture: "RentPasto"
+	station: "Station" 
+    erosion_impact: "Import_ero"	
+	// Boundary settings  module	
+	protection_p: "Prop_prote"     
+    restoration_p: "Prop_resta" 
+    sustainableuse_p: "Prop_usoS"
+    participation: "Partici_ta"
+	clarity_cons: "Clarid_n_c"
+    clarity_prod: "Clarid_n_p"	
+	// Projects  module	
+	prod_projects: "Pro_tasa_p"
+	cons_projects: "Pro_tasa_c"
+	socialinfluence_prod: "Infl_soc_p"
+	socialinfluence_cons: "Infl_soc_c"   
+    // Monitoring  module    
+    compliance_cons: "Cumpli_con"
+    compliance_prod: "Cumpli_pro"
+    monitActor_prod: "Num_act_pr"
+	monitActor_cons: "Num_act_co"
+	sanctions_cons: "Sancion_co"
+	sanctions_prod: "Sancion_pr"
+	par: "annual_par"    // participation effect
+    sic: "annual_sic"    // socialinfluence_cons effect
+    cpro: "annual_cpr"   // cons_projects effect
+    att: "annual_att"    // attitude_projects effect
+    ppro: "annual_ppr"   // prod_projects effect
+    h: "annual_h"        // habit effect
+    th: "annual_th"     // threats_pasture effect
+    san: "annual_san"    // sanctions_cons effect
+    sip: "annual_sip"    // socialinfluence_prod effect
+    delay: "delay"       //delay for attitude construction
+       
+  }
+}
+
