@@ -1,0 +1,52 @@
+Id,Tipo,Nivel,Clase,Actor,Nomb_Actor,Source_Latitude,Source_Longitude,Destination_X,Destination_Y
+1,Publico,Regional,Politico_Administrativo,COR,Corantioquia,6.6503140,-75.45942,847179.95,1227367.72
+2,Publico,Regional,Politico_Administrativo,GOB,Gobernación de Antioquia,6.2439354,-75.57353,834426.45,1182448.69
+3,Mixto,Regional,Economico,EPM,Empresas Públicas de Medellín,6.2452250,-75.57790,833943.10,1182592.73
+4,Publico,Local,Politico_Administrativo,CON_SRO,Concejo Municipal Santa Rosa de Osos,6.6473800,-75.46031,847080.60,1227043.44
+5,Publico,Local,Politico_Administrativo,CON_BEL,Concejo Municipal Belmira,6.6050783,-75.66633,824277.22,1222431.99
+6,Publico,Nacional,Politico_Administrativo,MIN_AMB,Ministerio de Ambiente y Desarrollo Sostenible,4.6252513,-74.06715,1001149.31,1003212.50
+7,Publico,Nacional,Politico_Administrativo,MIN_AGR,Ministerio de Agricultura y Desarrollo Rural,4.6019401,-74.07414,1000373.71,1000634.70
+8,Publico,Local,Politico_Administrativo,ALC_SRO,Alcaldía de Santa Rosa de Osos,6.6491200,-75.46044,847066.76,1227235.96
+9,Publico,Local,Politico_Administrativo,ALC_BEL,Alcaldía de Belmira,6.6050783,-75.66633,824277.22,1222431.99
+10,Privado,Local,Socio_cultural,JAC_BEL_Q,Juntas de Acción Comunal (JAC) - Belmira (Quebraditas),6.7514061,-75.63912,827338.69,1238610.65
+11,Privado,Local,Socio_cultural,JAC_BEL_L,Juntas de Acción Comunal (JAC) - Belmira (Labores),6.7093736,-75.61233,830286.85,1233951.24
+12,Privado,Local,Socio_cultural,JAC_BEL_LC,Juntas de Acción Comunal (JAC) - Belmira (La Candelaria),6.6396569,-75.67097,823776.18,1226259.10
+13,Privado,Local,Socio_cultural,JAC_BEL_RA,Juntas de Acción Comunal (JAC) - Belmira (Río Arriba),6.6066085,-75.66732,824168.24,1222601.63
+14,Privado,Local,Socio_cultural,JAC_BEL_P,Juntas de Acción Comunal (JAC) - Belmira (Playitas),6.7418991,-75.61180,830356.76,1237549.30
+15,Privado,Local,Socio_cultural,JAC_SRO_LR,Juntas de Acción Comunal (JAC) - Santa Rosa de Osos (La Ruíz),6.7532401,-75.52066,840439.77,1238773.14
+16,Privado,Local,Socio_cultural,JAC_SRO_A,Juntas de Acción Comunal (JAC) - Santa Rosa de Osos (Aragón),6.7827974,-75.56247,835826.09,1242056.84
+17,Privado,Local,Socio_cultural,JAC_SRO_ET,Juntas de Acción Comunal (JAC) - Santa Rosa de Osos (El Topacio),6.7295530,-75.58593,833213.58,1236174.57
+18,Privado,Local,Socio_cultural,JAC_SRO_EC,Juntas de Acción Comunal (JAC) - Santa Rosa de Osos (El Chaquiro),6.7542832,-75.48933,843904.76,1238878.37
+19,Privado,Local,Socio_cultural,ASO_BEL,ASOCOMUNAL Belmira,6.6050800,-75.66619,824292.71,1222432.13
+20,Privado,Local,Socio_cultural,ASO_SRO,ASOCOMUNAL - Santa Rosa de Osos,6.6473800,-75.46031,847080.60,1227043.44
+21,Publico,Local,Politico_Administrativo,UM_BEL,UMATA Belmira (no está en La Candelaria),6.6050800,-75.66619,824292.71,1222432.13
+22,Publico,Local,Politico_Administrativo,UM_SRO,UMATA Santa Rosa de Osos,6.6473800,-75.46031,847080.60,1227043.44
+23,Mixto,Local,Politico_Administrativo,MA_BEL,Mesa Ambiental BEL,6.6050800,-75.66619,824292.71,1222432.13
+24,Mixto,Local,Politico_Administrativo,MA_SRO,Mesa Ambiental SRO,6.6473800,-75.46031,847080.60,1227043.44
+25,Privado,Nacional,Economico,COLANTA,COLANTA Cooperativa Santa Rosa de Osos,6.6528770,-75.45747,847396.43,1227650.64
+27,Privado,Local,Economico,L_BETANIA,Lácteos Betania (presente en las 4 veredas de Santa Rosa),6.6617970,-75.46037,847078.43,1228638.27
+28,Privado,Nacional,Economico,ALPINA,Alpina,6.5632181,-75.50909,841658.34,1217748.55
+29,Privado,Local,Economico,PROLINCO,Procesadora de Leche Integrales de Colombia,6.7005955,-75.46913,846121.66,1232932.93
+30,Publico,Regional,Politico_Administrativo,B_AGR,Banco Agrario,4.6506218,-74.06362,1001540.94,1006018.01
+31,Publico,Regional,Politico_Administrativo,CFA,Cooperativa Financiera de Antioquia,6.6482220,-75.46139,846961.41,1227136.91
+32,Privado,Local,Politico_Administrativo,CAB_V,Cabildo Verde - Belmira,6.6052470,-75.66652,824256.26,1222450.72
+33,Privado,Local,Socio_cultural,ASOTRUBEL,Asociación de Trucheros de Belmira - ASOTRUBEL tiene 29 familias,6.6068037,-75.66702,824201.50,1222623.12
+34,Mixto,Regional,Socio_cultural,RECAB,Asociación Red Colombiana de Agricultura Biológica  RECAB ANTIOQUIA (Belmira),6.2566970,-75.58515,833144.15,1183864.11
+35,Privado,Local,Socio_cultural,GUANACAS,Fundación GUANACAS,6.2061610,-75.57237,834543.04,1178269.56
+36,Mixto,Local,Socio_cultural,C_VERDE,Cuenca Verde,6.2030710,-75.57277,834497.79,1177927.85
+37,Mixto,Nacional,Politico_Administrativo,AVH,Instituto Alexander Von Humboldt (vinculada al Ministerio de Medio Ambiente),4.6168032,-74.07325,1000472.46,1002278.29
+38,Privado,Internacional,Socio_cultural,FMAM,Fondo Mundial para el Medio Ambiente (FMAM  Global Environment Facility) (Belmira),6.6050783,-75.66633,824277.22,1222431.99
+39,Privado,Local,Socio_cultural,ORG_AFRO,Organización Afro,6.6050783,-75.66633,824277.22,1222431.99
+40,Publico,Regional,Politico_Administrativo,HTM,Grupo HTM,6.2469855,-75.58900,832714.88,1182791.00
+41,Publico,Nacional,Politico_Administrativo,SENA,SENA,4.6436913,-74.06362,1001540.95,1005251.63
+42,Privado,Regional,Socio_cultural,U_CAT,Universidad Católica del Norte,6.6585531,-75.44673,848586.07,1228275.23
+43,Publico,Regional,Socio_cultural,U_ANT,Universidad de Antioquia,6.2675566,-75.56900,834935.34,1185060.35
+44,Publico,Nacional,Socio_cultural,UNAL,Universidad Nacional de Colombia,6.2617139,-75.57723,834022.47,1184416.60
+45,Publico,Local,Politico_Administrativo,CON_CUENCA,Consejo de Cuenca,6.6506429,-75.45809,847327.16,1227403.69
+809,Publico,Local,Politico_Administrativo,AMVA,Area Metropolotana del Valle de Aburra,6.2424030,-75.57392,834382.80,1182279.29
+810,Privado,Internacional,Socio_cultural,PNUD,Programa de las Naciones Unidas para el Desarrollo,4.6665142,-74.05190,1002841.27,1007775.46
+811,Privado,Local,Economico,AURALAC,AURALAC,6.185282893,-75.37856445,855992.40,1175903.52
+812,Privado,Local,Economico,CORPOGANSA,CORPOGANSA,6.647454043,-75.46079759,847026.70,1227051.78
+813,Privado,Local,Economico,EL_CORRAL,EL_CORRAL,6.232920722,-75.59376732,832182.65,1181236.59
+814,Privado,Local,Economico,EL_LLANO,EL_LLANO,6.806110922,-75.48962277,843889.07,1244611.79
+815,Privado,Internacional,Economico,PARMALAT,PARMALAT,6.269856831,-75.57295516,834498.25,1185316.06
